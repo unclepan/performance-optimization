@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>localStorage存储静态资源</title>
+</head>
+<body>
+    <script>
+        let testJsContent = localStorage.getItem('test');
+        if(testJsContent){
+            eval(testJsContent);
+        } else{
+            let xmlHttpRequest = new XMLHttpRequest();
+
+            //追踪ajax请求的当前状态
+            xmlHttpRequest.onreadystatechange = callback;
+
+            // 获取上传、下载的进度
+            xmlHttpRequest.onprogress = progressCallback;
+
+            xmlHttpRequest.open('GET','./test.js',true);
+            xmlHttpRequest.send();
+
+            function callback(){
+                if(xmlHttpRequest.readyState === 4 && xmlHttpRequest.status === 200 ) {
+                    let responseText = xmlHttpRequest.responseText;
+                    eval(responseText);
+                    localStorage.setItem('test', responseText);
+                }
+            }
+            function progressCallback(event) {
+                if (event.lengthComputable) {
+                    var completedPercent = event.loaded / event.total;
+                    console.log('进度', completedPercent)
+                }
+            }
+        }
+    </script> 
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        function openDB(name,callback){
+            //建立打开indexedDB
+            var request = window.indexedDB.open(name);
+            request.onerror = function (event) {
+                console.log('数据库打开报错');
+            };
+
+            request.onsuccess = function(event){ // 成功打开数据库
+                myDB.db = request.result;
+                callback && callback();
+            }
+
+            request.onupgradeneeded = function(event){ // 版本从无到有，所以会触发这个事件
+                let db = event.target.result;
+                //第一件事是新建对象仓库（即新建表）
+                var store = db.createObjectStore('books', {
+                    keyPath: 'isbn'
+                });
+
+                //新建索引
+                var titleIndex = store.createIndex('by_title', 'title', { unique: true });
+                var authorIndex = store.createIndex('by_author', 'author', { unique: false });
+
+                //初始创建一些数据
+                store.put({
+                    title: 'Quarry Menoies',
+                    author: 'Fred',
+                    isbn: 1
+                });
+                store.put({
+                    title: 'Water Buffaloes',
+                    author: 'Jack',
+                    isbn: 2
+                });
+                store.put({
+                    title: 'Bedroc Ni',
+                    author: 'Fred',
+                    isbn: 3
+                });
+            }
+        }
+        var myDB = {
+            name: 'testDB',
+            version: '1.0.0',
+            db: null,
+        };
+
+        function addData(db, storeName){ // 通过事务增加数据
+            let transaction = db.transaction('books', 'readwrite'); // 新建事务，可读可写
+            let store = transaction.objectStore('books'); // 将事务和ObjectStore关联起来
+
+            // 获取数据
+            // let request = store.get(3);
+            // request.onerror = function(event) {
+            //     console.log('事务失败');
+            // };
+            // request.onsuccess = function(event) {
+            //     // request.result 或者 event.target.result 都一样的
+            //     if (request.result) {
+            //         console.log(event.target.result);
+            //     } else {
+            //         console.log('未获得数据记录');
+            //     }
+            // };
+
+
+            
+            // 添加信息
+            // let request =  store.add({
+            //     title: 'Uncle Li',
+            //     author: 'Nice Ooo',
+            //     isbn: 5
+            // });
+
+
+            // 删除信息
+            // store.delete(3);
+
+
+            // 更新数据
+            // let request = store.put({
+            //     title: 'Water Buffaloes',
+            //     author: 'Uncle LiYang',
+            //     isbn: 2
+            // });
+            // request.onsuccess = function (event) {
+            //     console.log('数据更新成功');
+            // };
+
+
+            // 使用索引，索引的意义在于，可以让你搜索任意字段，也就是说从任意字段拿到数据记录。如果不建立索引，默认只能搜索主键（即从主键取值）
+            let index = store.index('by_author');
+            let request = index.get('Nice');
+
+            request.onsuccess = function (e) {
+            let result = e.target.result;
+                if (result) {
+                    console.log(result);
+                } else {
+                    console.log('数据为空');
+                }
+            }
+
+            
+
+        }
+        openDB(myDB.name, function(){
+            // // 关闭indexedDB
+            // myDB.db.close();
+            // // 删除indexedDB
+            // window.indexedDB.deleteDatabase(myDB.name);
+
+            addData(myDB.db);
+        });
+
+        // objectStore 不同于数据库的表
+
+        
+    </script>
+</body>
+</html>
